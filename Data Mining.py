@@ -197,7 +197,8 @@ def get_frequent_item_sets(base_item, item: list, conditional_tree: dict, freque
         new_item = sorted(new_item)
 
         temp = [key, *item]
-        temp.remove(base_item)
+        if base_item in temp:
+            temp.remove(base_item)
         support = get_support(temp, data)
         # support = 0
         for i in frequent_item_sets:
@@ -267,8 +268,10 @@ def generate_lift(item_association_rules, frequent_item_set, total_count):
 
         y = sorted(item[1])
         y = get_support2(y, frequent_item_set)
-
-        temp = ((intersection * total_count)/(x * y))
+        if x * y > 0:
+            temp = ((intersection * total_count)/(x * y))
+        else:
+            temp = 0
         relation = "dependent"
         correlation = "positive"
         if temp < 1:
@@ -292,10 +295,10 @@ def fp_growth(data, supp, conf):
     frequent = sort_data(data, frequent, supports)
 
     frequent_item_sets += (supports.items())
-    print(frequent_item_sets)
-    print("The following is data:\n", data)
-    print("The following is frequent:\n", frequent)
-    print("The following is supports:\n", supports)
+    # print(frequent_item_sets)
+    # print("The following is data:\n", data)
+    # print("The following is frequent:\n", frequent)
+    # print("The following is supports:\n", supports)
 
     root = Node(None, 0, dict())
     build_tree(root, data, frequent)
@@ -305,7 +308,6 @@ def fp_growth(data, supp, conf):
 
     conditional_pattern_base = dict()
     get_conditional_pattern_base(conditional_pattern_base, root, frequent)
-    conditional_tree = dict()
     association_rules = list()
     strong_rules = list()
     for item in conditional_pattern_base.keys():
@@ -327,7 +329,9 @@ def fp_growth(data, supp, conf):
     # item_strong_rules =
     strong_rules = generate_strong_rules(association_rules, frequent_item_sets, conf)
     print("\nStrong Rules\n")
-    print(*strong_rules, sep="\n")
+    for rule in strong_rules:
+        print(*rule[0], "->", *rule[1])
+#    print(*strong_rules, sep="\n")
 
     lift = generate_lift(association_rules, frequent_item_sets, len(data))
 
@@ -349,7 +353,7 @@ def main():
 
     for lst in range(0, len(data)):
         data[lst] = list(set(data[lst]))
-    ascii_art = pyfiglet.figlet_format("Correctness By Design")
+    ascii_art = pyfiglet.figlet_format("FP-Growth")
     print(ascii_art)
     support = float(input("support: "))
     confidence = float(input("confidence: "))
